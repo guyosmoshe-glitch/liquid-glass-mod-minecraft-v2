@@ -1,0 +1,31 @@
+name: build
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Unzip newest uploaded project zip
+        run: |
+          z="$(git log --diff-filter=AM --name-only --format= -- '*.zip' | head -1)"
+          echo "Using: $z"
+          unzip -q "$z"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: current
+      - name: Build
+        working-directory: reflections-mod
+        run: gradle build --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guyos-reflections-jar
+          path: reflections-mod/build/libs/*.jar
